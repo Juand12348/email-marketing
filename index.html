@@ -191,6 +191,21 @@
     .legal { font-size: 13px; color: #7f93b8; }
     footer { padding: 36px 0 48px; color: var(--muted); font-size: 14px; }
 
+    /* ---------- MOVIMIENTO AUTOMÁTICO ---------- */
+    .grad { background-image: linear-gradient(90deg, var(--cyan), var(--violet), var(--cyan)); background-size: 200% auto; animation: shimmer 5s linear infinite; }
+    @keyframes shimmer { to { background-position: 200% center; } }
+    .floaters { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .fl { position: absolute; font: 600 13px var(--mono); padding: 8px 12px; border-radius: 8px; background: rgba(15,23,41,.7); border: 1px solid var(--line); color: #9db4ff; backdrop-filter: blur(4px); opacity: .75; animation: floaty 9s ease-in-out infinite; }
+    .fl.ok { color: var(--mint); }
+    @keyframes floaty { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-22px) rotate(1.5deg); } }
+    .tilt img { animation: bob 7s ease-in-out infinite; }
+    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .hero-form .btn { animation: ring 2.6s ease-out infinite; }
+    .hero-form .btn:hover { animation: none; }
+    @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(34,211,238,.55); } 70%, 100% { box-shadow: 0 0 0 16px rgba(34,211,238,0); } }
+    .code-line.scan { background: rgba(124,92,255,.2); border-left-color: var(--violet); }
+    @media (max-width: 880px) { .floaters { display: none; } }
+
     /* ---------- RESPONSIVE ---------- */
     @media (max-width: 880px) {
       .hero .wrap, .route, .planner, .join, .session, .hunt { grid-template-columns: 1fr; }
@@ -234,6 +249,13 @@
   <header class="hero" id="hero">
     <div class="hero-parallax" id="hero-parallax" aria-hidden="true"><div class="hero-bg"></div></div>
     <div class="hero-shade" aria-hidden="true"></div>
+    <div class="floaters" aria-hidden="true">
+      <span class="fl" style="top:14%;right:5%">$ git commit -m "feat"</span>
+      <span class="fl ok" style="top:58%;right:2%;animation-delay:-3s">✓ 12 pruebas pasaron</span>
+      <span class="fl" style="top:84%;left:44%;animation-delay:-5s">&lt;/&gt; refactor</span>
+      <span class="fl" style="top:10%;left:44%;animation-delay:-7s">npm run dev</span>
+      <span class="fl ok" style="top:78%;left:2%;animation-delay:-2s">merge: main</span>
+    </div>
     <canvas id="net" aria-hidden="true"></canvas>
     <div class="wrap">
       <div>
@@ -415,6 +437,7 @@
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       let W = 0, H = 0, pts = [], visible = true, running = false;
       const mouse = { x: null, y: null };
+      const pulses = [];
 
       function resize() {
         const r = hero.getBoundingClientRect();
@@ -455,6 +478,17 @@
         }
       }
 
+      /* Pulsos de datos que viajan por las conexiones */
+      function drawPulses() {
+        for (const p of pulses) {
+          const x = p.a.x + (p.b.x - p.a.x) * p.t, y = p.a.y + (p.b.y - p.a.y) * p.t;
+          ctx.fillStyle = "rgba(32,201,151,.95)";
+          ctx.shadowColor = "#20C997"; ctx.shadowBlur = 12;
+          ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
       function tick() {
         if (!visible) { running = false; return; }
         for (const p of pts) {
@@ -462,7 +496,22 @@
           if (p.x < 0 || p.x > W) p.vx *= -1;
           if (p.y < 0 || p.y > H) p.vy *= -1;
         }
+        if (Math.random() < 0.06 && pts.length > 1) {
+          const a = pts[(Math.random() * pts.length) | 0];
+          let best = null, bd = 140;
+          for (const b of pts) {
+            if (b === a) continue;
+            const d = Math.hypot(a.x - b.x, a.y - b.y);
+            if (d < bd && Math.random() < 0.5) { best = b; bd = d; }
+          }
+          if (best) pulses.push({ a, b: best, t: 0 });
+        }
+        for (let i = pulses.length - 1; i >= 0; i--) {
+          pulses[i].t += 0.025;
+          if (pulses[i].t >= 1) pulses.splice(i, 1);
+        }
         draw();
+        drawPulses();
         requestAnimationFrame(tick);
       }
 
@@ -542,6 +591,13 @@
 
     const term = document.getElementById("term");
     let runId = 0;
+    let termUser = false;
+    const langs = ["js", "py", "sql"];
+
+    function selectTab(lang) {
+      document.querySelectorAll(".tab").forEach(b =>
+        b.setAttribute("aria-selected", b.dataset.lang === lang ? "true" : "false"));
+    }
 
     async function play(lang) {
       const id = ++runId;
@@ -562,12 +618,20 @@
       const cur = document.createElement("span");
       cur.className = "cursor";
       term.appendChild(cur);
+      /* Avanza solo al siguiente lenguaje hasta que el usuario elija uno */
+      if (!reduce && !termUser) {
+        await wait(3500);
+        if (id !== runId || termUser) return;
+        const next = langs[(langs.indexOf(lang) + 1) % langs.length];
+        selectTab(next);
+        play(next);
+      }
     }
 
     document.querySelectorAll(".tab").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", "false"));
-        btn.setAttribute("aria-selected", "true");
+        termUser = true;
+        selectTab(btn.dataset.lang);
         play(btn.dataset.lang);
       });
     });
@@ -698,6 +762,20 @@
     document.getElementById("m-reset").addEventListener("click", renderHunt);
     renderHunt();
 
+    /* Un "escáner" recorre las líneas solo, hasta que el usuario pasa el mouse */
+    let huntUser = false, huntVisible = false, scanIdx = 0;
+    function clearScan() { codeBox.querySelectorAll(".scan").forEach(b => b.classList.remove("scan")); }
+    codeBox.addEventListener("pointerenter", () => { huntUser = true; clearScan(); });
+    codeBox.addEventListener("focusin", () => { huntUser = true; clearScan(); });
+    new IntersectionObserver(es => { huntVisible = es[0].isIntersecting; }).observe(codeBox);
+    setInterval(() => {
+      if (huntUser || solved || reduce || !huntVisible || document.hidden) return;
+      clearScan();
+      const lines = codeBox.querySelectorAll(".code-line");
+      lines[scanIdx % lines.length].classList.add("scan");
+      scanIdx++;
+    }, 600);
+
     /* =========================================================
        8. RUTAS COMO GRAFO DE COMMITS
     ========================================================= */
@@ -742,7 +820,7 @@
       const s1 = document.createElement("strong"); s1.textContent = r.titulo;
       const s2 = document.createElement("span"); s2.textContent = r.desc;
       b.append(s1, s2);
-      b.addEventListener("click", () => showRoute(key));
+      b.addEventListener("click", () => { routeUser = true; showRoute(key); });
       b.addEventListener("pointermove", (e) => {
         const rc = b.getBoundingClientRect();
         b.style.setProperty("--mx", (e.clientX - rc.left) + "px");
@@ -751,6 +829,16 @@
       tabsBox.appendChild(b);
     });
     showRoute("inicio");
+
+    /* Las rutas cambian solas hasta que el usuario elige una */
+    const routeKeys = Object.keys(rutas);
+    let routeUser = false, routeIdx = 0, routeVisible = false;
+    new IntersectionObserver(es => { routeVisible = es[0].isIntersecting; }).observe(document.querySelector(".route"));
+    setInterval(() => {
+      if (routeUser || reduce || !routeVisible || document.hidden) return;
+      routeIdx = (routeIdx + 1) % routeKeys.length;
+      showRoute(routeKeys[routeIdx]);
+    }, 4500);
 
     /* =========================================================
        9. CALCULADORA DE SEMANAS
@@ -801,6 +889,20 @@
       }
     })();
 
+    /* La calculadora se mueve sola hasta que el usuario toca el control */
+    let plannerUser = false, sweepDir = 1, plannerVisible = false;
+    horas.addEventListener("pointerdown", () => { plannerUser = true; });
+    horas.addEventListener("keydown", () => { plannerUser = true; });
+    new IntersectionObserver(es => { plannerVisible = es[0].isIntersecting; }).observe(horas);
+    setInterval(() => {
+      if (plannerUser || reduce || !plannerVisible || document.hidden) return;
+      let v = Number(horas.value) + sweepDir;
+      if (v >= 15) { v = 15; sweepDir = -1; }
+      if (v <= 2) { v = 2; sweepDir = 1; }
+      horas.value = v;
+      calc(false);
+    }, 700);
+
     document.querySelectorAll("[data-focus-email]").forEach(a => {
       a.addEventListener("click", (e) => {
         e.preventDefault();
@@ -812,11 +914,7 @@
     /* =========================================================
        10. FORMULARIO + EMAILJS (claves en config.js)
     ========================================================= */
-    const cfg = window.EMAILJS_CONFIG = {
-  PUBLIC_KEY:  "Kf6C1PTCfLEDF97Tj",   // Account > General
-  SERVICE_ID:  "service_d8pt5jq",   // Email Services
-  TEMPLATE_ID: "template_t6hs8p4"   // Email Templates
-};
+    const cfg = window.EMAILJS_CONFIG || {};
     if (window.emailjs) emailjs.init({ publicKey: cfg.PUBLIC_KEY });
 
     const form = document.getElementById("form-suscripcion");
