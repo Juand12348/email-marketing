@@ -496,7 +496,7 @@
         mensaje.textContent = "✓ Merge completado. Revisa tu bandeja de entrada y la carpeta de spam.";
         form.reset();
       } catch (error) {
-        console.error(error);
+        console.error(error.status, error.text);
         mensaje.className = "err";
         mensaje.textContent = "No pudimos enviar el correo. Revisa tu conexión e intenta de nuevo.";
       } finally {
