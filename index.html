@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rama | Mentorías de programación</title>
+  <meta name="description" content="Mentorías 1 a 1 de programación: alguien revisa tu código contigo, semana a semana.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:     #070B14;
+      --panel:  #0F1729;
+      --panel2: #141F38;
+      --line:   #22345C;
+      --text:   #E6ECFA;
+      --muted:  #8EA0C4;
+      --cyan:   #22D3EE;
+      --violet: #7C5CFF;
+      --mint:   #20C997;
+      --coral:  #FF6B57;
+      --display: "Bricolage Grotesque", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--display);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; border-radius: 6px; }
+    .wrap { width: min(1120px, 100% - 40px); margin-inline: auto; }
+
+    /* ---------- NAV ---------- */
+    nav { position: absolute; inset: 0 0 auto 0; z-index: 5; padding: 22px 0; }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 26px; letter-spacing: -.02em; text-decoration: none; }
+    .btn {
+      display: inline-block; border: 0; cursor: pointer; text-decoration: none;
+      background: linear-gradient(135deg, var(--violet), var(--cyan)); color: #04101c;
+      font: 700 16px/1 var(--display);
+      padding: 15px 24px; border-radius: 10px;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 0 28px rgba(34,211,238,.45); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.ghost { background: transparent; color: var(--text); border: 2px solid var(--line); padding: 13px 22px; }
+    .btn.ghost:hover { border-color: var(--cyan); box-shadow: none; }
+
+    /* ---------- HERO ---------- */
+    .hero {
+      position: relative; padding: 130px 0 100px;
+      background:
+        linear-gradient(180deg, rgba(7,11,20,.25) 0%, rgba(7,11,20,.55) 70%, var(--bg) 100%),
+        url("img/hero-circuit.jpg") center top / cover no-repeat;
+    }
+    .hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
+    h1 { font-size: clamp(38px, 5.6vw, 68px); line-height: 1.02; letter-spacing: -.035em; font-weight: 800; margin: 0 0 22px; }
+    .grad { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lead { font-size: 19px; color: #b6c4e0; max-width: 46ch; margin: 0 0 30px; }
+    .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .terminal { background: rgba(11,18,34,.92); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 0 60px rgba(124,92,255,.28), 0 24px 60px rgba(0,0,0,.5); overflow: hidden; backdrop-filter: blur(6px); }
+    .term-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--panel2); }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .term-title { margin-left: 8px; font: 400 13px var(--mono); color: var(--muted); }
+    .tabs { display: flex; gap: 8px; padding: 14px 16px 0; flex-wrap: wrap; }
+    .tab {
+      font: 600 13px var(--mono); color: var(--muted); background: transparent;
+      border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .tab:hover { border-color: var(--cyan); color: #fff; }
+    .tab[aria-selected="true"] { background: var(--cyan); border-color: var(--cyan); color: #04101c; }
+    .term-body { margin: 0; padding: 18px 20px 24px; min-height: 280px; font: 400 14.5px/1.75 var(--mono); color: #d7e2f5; white-space: pre-wrap; }
+    .term-body .l { display: block; }
+    .c-prompt { color: var(--mint); }
+    .c-bug    { color: var(--coral); }
+    .c-mentor { color: #9db4ff; }
+    .c-ok     { color: var(--mint); font-weight: 600; }
+    .cursor { display: inline-block; width: 8px; height: 1em; background: var(--mint); vertical-align: -2px; animation: blink 1s steps(2) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ---------- TECNOLOGÍAS ---------- */
+    .stack { padding: 0 0 20px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip { font: 600 14px var(--mono); padding: 9px 16px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); color: #c9d6f2; transition: border-color .15s, color .15s, transform .15s; }
+    .chip:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); }
+    .stack p { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
+
+    /* ---------- SECCIONES ---------- */
+    section { padding: 80px 0; }
+    h2 { font-size: clamp(30px, 4vw, 46px); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; margin: 0 0 14px; }
+    .sub { color: var(--muted); max-width: 52ch; margin: 0 0 36px; }
+
+    /* ---------- SESIÓN (imagen) ---------- */
+    .session { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: center; }
+    .session img { width: 100%; height: auto; display: block; border-radius: 20px; border: 1px solid var(--line); box-shadow: 0 0 60px rgba(34,211,238,.18); }
+    .points { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 18px; }
+    .points li { padding-left: 22px; position: relative; color: #b6c4e0; }
+    .points li::before { content: ""; position: absolute; left: 0; top: 11px; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px var(--mint); }
+    .points strong { color: var(--text); display: block; }
+
+    /* ---------- RUTA (git graph) ---------- */
+    .route { display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: start; }
+    .route-tabs { display: grid; gap: 10px; }
+    .route-tab {
+      text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+      padding: 16px 18px; cursor: pointer; font-family: var(--display); color: var(--text);
+      transition: border-color .15s, transform .15s;
+    }
+    .route-tab:hover { transform: translateX(4px); }
+    .route-tab strong { display: block; font-size: 18px; }
+    .route-tab span { font-size: 14px; color: var(--muted); }
+    .route-tab[aria-selected="true"] { border-color: var(--cyan); box-shadow: 0 0 24px rgba(34,211,238,.25); }
+
+    .graph { list-style: none; margin: 0; padding: 0; position: relative; }
+    .graph::before { content: ""; position: absolute; left: 11px; top: 8px; bottom: 8px; width: 3px; background: linear-gradient(var(--violet), var(--cyan), var(--mint)); border-radius: 3px; }
+    .commit { position: relative; padding: 0 0 22px 46px; opacity: 0; transform: translateX(-12px); animation: in .4s ease forwards; }
+    .commit::before {
+      content: ""; position: absolute; left: 3px; top: 4px; width: 19px; height: 19px; border-radius: 50%;
+      background: var(--bg); border: 4px solid var(--cyan);
+    }
+    .commit:last-child::before { background: var(--mint); border-color: var(--mint); box-shadow: 0 0 14px var(--mint); }
+    .commit code { font: 600 15px var(--mono); color: var(--text); }
+    .commit small { display: block; color: var(--muted); font-size: 14px; }
+    @keyframes in { to { opacity: 1; transform: none; } }
+
+    /* ---------- CALCULADORA ---------- */
+    .planner { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; box-shadow: 0 0 60px rgba(124,92,255,.15); }
+    label.big { font-weight: 600; display: block; margin-bottom: 18px; }
+    input[type="range"] { width: 100%; accent-color: var(--cyan); height: 28px; cursor: pointer; }
+    .scale { display: flex; justify-content: space-between; font: 400 13px var(--mono); color: var(--muted); }
+    .result .num { font-size: clamp(64px, 9vw, 108px); font-weight: 800; letter-spacing: -.05em; line-height: .95; background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .result p { margin: 8px 0 0; color: var(--muted); }
+    .note { font-size: 13px; margin-top: 18px; }
+
+    /* ---------- SUSCRIPCIÓN ---------- */
+    .join {
+      border: 1px solid var(--line); border-radius: 24px; padding: 64px 48px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center;
+      background:
+        linear-gradient(90deg, rgba(7,11,20,.92), rgba(7,11,20,.7)),
+        url("img/hero-circuit.jpg") center / cover no-repeat;
+    }
+    .join p { color: #b6c4e0; max-width: 44ch; margin: 0; }
+    .join form { display: grid; gap: 12px; }
+    .join input[type="email"] {
+      width: 100%; padding: 16px 18px; border-radius: 10px; border: 2px solid var(--line);
+      background: rgba(15,23,41,.9); color: #fff; font: 400 16px var(--mono);
+    }
+    .join input[type="email"]::placeholder { color: #667ba3; }
+    .join input[type="email"]:focus { border-color: var(--cyan); outline: none; box-shadow: 0 0 0 4px rgba(34,211,238,.15); }
+    .join .btn { width: 100%; padding: 16px; font-size: 17px; }
+    #mensaje { min-height: 24px; font: 400 14px var(--mono); }
+    .ok { color: var(--mint); }
+    .err { color: var(--coral); }
+    .legal { font-size: 13px; color: #7f93b8; }
+
+    footer { padding: 36px 0 48px; color: var(--muted); font-size: 14px; }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 880px) {
+      .hero .wrap, .route, .planner, .join, .session { grid-template-columns: 1fr; }
+      .hero { padding: 110px 0 50px; }
+      .planner { padding: 28px; }
+      .join { padding: 40px 26px; }
+      section { padding: 56px 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { animation: none !important; transition: none !important; }
+      .commit { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#" aria-label="Rama, inicio">
+        <svg width="30" height="30" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <circle cx="7" cy="6" r="3.2" fill="#22D3EE"/>
+          <circle cx="7" cy="22" r="3.2" fill="#22D3EE"/>
+          <circle cx="21" cy="12" r="3.2" fill="#20C997"/>
+          <path d="M7 9v10M7 16c0-4 14-1 14-1" stroke="#E6ECFA" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        rama
+      </a>
+      <a class="btn" href="#suscribirme">Quiero mi mentoría</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div>
+        <h1>Aprende a programar con alguien que <span class="grad">revisa tu código.</span></h1>
+        <p class="lead">Mentorías 1 a 1 donde escribes código real, recibes correcciones claras y avanzas semana a semana, sin quedarte atascado frente a un error.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#suscribirme">Suscribirme</a>
+          <a class="btn ghost" href="#ruta">Ver la ruta</a>
+        </div>
+      </div>
+
+      <div class="terminal" aria-label="Ejemplo de una revisión de código en vivo">
+        <div class="term-bar">
+          <span class="dot" style="background:#FF6B57"></span>
+          <span class="dot" style="background:#FFC857"></span>
+          <span class="dot" style="background:#20C997"></span>
+          <span class="term-title">sesion-mentoria</span>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Lenguaje de la sesión">
+          <button class="tab" role="tab" aria-selected="true" data-lang="js">JavaScript</button>
+          <button class="tab" role="tab" aria-selected="false" data-lang="py">Python</button>
+          <button class="tab" role="tab" aria-selected="false" data-lang="sql">SQL</button>
+        </div>
+        <pre class="term-body" id="term" aria-live="polite"></pre>
+      </div>
+    </div>
+  </header>
+
+  <!-- TECNOLOGÍAS -->
+  <div class="stack">
+    <div class="wrap">
+      <p>Tecnologías que practicamos en las sesiones</p>
+      <div class="chips">
+        <span class="chip">JavaScript</span><span class="chip">TypeScript</span><span class="chip">Python</span>
+        <span class="chip">Node.js</span><span class="chip">React</span><span class="chip">SQL</span>
+        <span class="chip">Git y GitHub</span><span class="chip">APIs REST</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESIÓN -->
+  <section>
+    <div class="wrap session">
+      <img src="img/mentor-session.jpg" alt="Editor de código mostrando un error en la función suma y un comentario del mentor preguntando qué debería devolver" width="1200" height="800" loading="lazy">
+      <div>
+        <h2>Una revisión de código, no un video más</h2>
+        <ul class="points">
+          <li><strong>Tu código, tu ritmo</strong>Trabajas sobre lo que tú escribes, no sobre ejemplos ajenos.</li>
+          <li><strong>Preguntas que te hacen pensar</strong>El mentor te guía hasta que encuentras el error por ti mismo.</li>
+          <li><strong>Pruebas que lo confirman</strong>Cada avance se valida corriendo el código, no solo leyéndolo.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- RUTA -->
+  <section id="ruta" style="padding-top:20px">
+    <div class="wrap">
+      <h2>Elige tu ruta y mira cómo se arma</h2>
+      <p class="sub">Cada ruta es una rama de commits: pequeños avances que terminan en algo que puedes mostrar.</p>
+
+      <div class="route">
+        <div class="route-tabs" role="tablist" aria-label="Rutas de mentoría" id="route-tabs"></div>
+        <ol class="graph" id="graph" aria-live="polite"></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALCULADORA -->
+  <section style="padding-top:20px">
+    <div class="wrap">
+      <div class="planner">
+        <div>
+          <label class="big" for="horas">¿Cuántas horas a la semana puedes dedicar?</label>
+          <input type="range" id="horas" min="2" max="15" value="6">
+          <div class="scale"><span>2 h</span><span id="horas-val">6 h</span><span>15 h</span></div>
+        </div>
+        <div class="result">
+          <div class="num" id="semanas">10</div>
+          <p>semanas estimadas hasta tu primer proyecto publicado.</p>
+          <p class="note">Estimación con base en unas 60 horas de práctica acompañada. Tu ritmo real puede variar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUSCRIPCIÓN -->
+  <section id="suscribirme" style="padding-top:20px">
+    <div class="wrap">
+      <div class="join">
+        <div>
+          <h2>Haz tu primer commit con nosotros</h2>
+          <p>Déjanos tu correo y te enviamos los detalles de las mentorías y cómo reservar tu primera sesión.</p>
+        </div>
+        <form id="form-suscripcion" novalidate>
+          <label for="email" style="position:absolute;left:-9999px">Correo electrónico</label>
+          <input type="email" id="email" name="user_email" placeholder="tucorreo@ejemplo.com" autocomplete="email" required>
+          <button class="btn" type="submit" id="btn">Suscribirme</button>
+          <div id="mensaje" role="status"></div>
+          <div class="legal">Solo usaremos tu correo para escribirte sobre las mentorías. Puedes darte de baja cuando quieras.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">© 2026 Rama. Proyecto académico de email marketing.</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    /* =========================================================
+       1. TERMINAL INTERACTIVA
+    ========================================================= */
+    const sessions = {
+      js: [
+        ["c-prompt", "$ rama revisar suma.js"],
+        ["", "function suma(a, b) {"],
+        ["c-bug", "  return a - b;   // <- aquí falla"],
+        ["", "}"],
+        ["", ""],
+        ["c-mentor", "Mentor: ¿qué esperas de suma(2, 3)?"],
+        ["c-mentor", "Mentor: mira el operador de la línea 2."],
+        ["c-prompt", "$ npm test"],
+        ["c-ok", "✓ 3 pruebas pasaron"]
+      ],
+      py: [
+        ["c-prompt", "$ rama revisar promedio.py"],
+        ["", "def promedio(notas):"],
+        ["c-bug", "    return sum(notas) / 5   # <- ¿y si hay 3 notas?"],
+        ["", ""],
+        ["c-mentor", "Mentor: ¿qué pasa si la lista cambia de tamaño?"],
+        ["c-mentor", "Mentor: prueba con len(notas)."],
+        ["c-prompt", "$ pytest"],
+        ["c-ok", "✓ 4 pruebas pasaron"]
+      ],
+      sql: [
+        ["c-prompt", "$ rama revisar clientes.sql"],
+        ["", "SELECT nombre, ciudad"],
+        ["", "FROM clientes"],
+        ["c-bug", "WHERE ciudad = Bogotá;   -- <- falta algo"],
+        ["", ""],
+        ["c-mentor", "Mentor: ¿cómo distingue SQL un texto de una columna?"],
+        ["c-mentor", "Mentor: usa comillas simples: 'Bogotá'."],
+        ["c-prompt", "$ ejecutar consulta"],
+        ["c-ok", "✓ 128 filas devueltas"]
+      ]
+    };
+
+    const term = document.getElementById("term");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let runId = 0;
+    const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+    async function play(lang) {
+      const id = ++runId;
+      term.innerHTML = "";
+      for (const [cls, text] of sessions[lang]) {
+        const line = document.createElement("span");
+        line.className = "l " + cls;
+        term.appendChild(line);
+        if (reduce) { line.textContent = text; continue; }
+        for (const ch of text) {
+          if (id !== runId) return;
+          line.textContent += ch;
+          await wait(cls === "c-prompt" ? 28 : 12);
+        }
+        await wait(cls === "c-mentor" ? 450 : 160);
+      }
+      if (id !== runId) return;
+      const cur = document.createElement("span");
+      cur.className = "cursor";
+      term.appendChild(cur);
+    }
+
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", "false"));
+        btn.setAttribute("aria-selected", "true");
+        play(btn.dataset.lang);
+      });
+    });
+    play("js");
+
+    /* =========================================================
+       2. RUTAS COMO GRAFO DE COMMITS
+    ========================================================= */
+    const rutas = {
+      inicio: {
+        titulo: "Primeros pasos", desc: "Nunca has programado",
+        commits: [
+          ["init: instalar tu entorno", "Semana 1"],
+          ["feat: variables y condicionales", "Semana 2"],
+          ["feat: funciones y bucles", "Semana 3"],
+          ["fix: leer errores sin miedo", "Semana 4"],
+          ["feat: tu primer mini proyecto", "Semana 6"],
+          ["merge: publicado en GitHub", "Semana 7"]
+        ]
+      },
+      proyecto: {
+        titulo: "Proyecto real", desc: "Ya sabes lo básico",
+        commits: [
+          ["init: idea y alcance", "Semana 1"],
+          ["feat: API con Node.js", "Semana 2"],
+          ["feat: base de datos", "Semana 4"],
+          ["feat: pantalla con React", "Semana 6"],
+          ["test: pruebas y revisión de código", "Semana 8"],
+          ["deploy: tu app en línea", "Semana 9"]
+        ]
+      },
+      empleo: {
+        titulo: "Primer empleo", desc: "Quieres trabajar en tecnología",
+        commits: [
+          ["init: diagnóstico de nivel", "Semana 1"],
+          ["feat: portafolio con 2 proyectos", "Semana 3"],
+          ["refactor: código limpio y Git", "Semana 5"],
+          ["feat: práctica de entrevistas técnicas", "Semana 7"],
+          ["docs: CV y LinkedIn técnico", "Semana 8"],
+          ["merge: primeras postulaciones", "Semana 9"]
+        ]
+      }
+    };
+
+    const tabsBox = document.getElementById("route-tabs");
+    const graph = document.getElementById("graph");
+
+    function showRoute(key) {
+      tabsBox.querySelectorAll(".route-tab").forEach(t =>
+        t.setAttribute("aria-selected", t.dataset.key === key ? "true" : "false"));
+      graph.innerHTML = "";
+      rutas[key].commits.forEach(([msg, when], i) => {
+        const li = document.createElement("li");
+        li.className = "commit";
+        li.style.animationDelay = (i * 90) + "ms";
+        li.innerHTML = `<code>${msg}</code><small>${when}</small>`;
+        graph.appendChild(li);
+      });
+    }
+
+    Object.entries(rutas).forEach(([key, r]) => {
+      const b = document.createElement("button");
+      b.className = "route-tab";
+      b.setAttribute("role", "tab");
+      b.dataset.key = key;
+      b.innerHTML = `<strong>${r.titulo}</strong><span>${r.desc}</span>`;
+      b.addEventListener("click", () => showRoute(key));
+      tabsBox.appendChild(b);
+    });
+    showRoute("inicio");
+
+    /* =========================================================
+       3. CALCULADORA DE SEMANAS
+    ========================================================= */
+    const horas = document.getElementById("horas");
+    const horasVal = document.getElementById("horas-val");
+    const semanas = document.getElementById("semanas");
+    function calc() {
+      horasVal.textContent = horas.value + " h";
+      semanas.textContent = Math.ceil(60 / Number(horas.value));
+    }
+    horas.addEventListener("input", calc);
+    calc();
+
+    /* =========================================================
+       4. FORMULARIO + EMAILJS
+    ========================================================= */
+    // ====== REEMPLAZA con tus datos de EmailJS ======
+    const PUBLIC_KEY  = "Kf6C1PTCfLEDF97Tj";
+    const SERVICE_ID  = "service_pqds5qo";
+    const TEMPLATE_ID = "template_pc4yj17";
+    // ================================================
+    emailjs.init({ publicKey: PUBLIC_KEY });
+
+    const form = document.getElementById("form-suscripcion");
+    const btn = document.getElementById("btn");
+    const mensaje = document.getElementById("mensaje");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const valido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if (!valido) {
+        mensaje.className = "err";
+        mensaje.textContent = "Escribe un correo válido, por ejemplo nombre@dominio.com.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+      mensaje.className = "";
+      mensaje.textContent = "";
+
+      try {
+        await emailjs.send(SERVICE_ID, TEMPLATE_ID, { user_email: email });
+        mensaje.className = "ok";
+        mensaje.textContent = "✓ Merge completado. Revisa tu bandeja de entrada y la carpeta de spam.";
+        form.reset();
+      } catch (error) {
+        console.error(error);
+        mensaje.className = "err";
+        mensaje.textContent = "No pudimos enviar el correo. Revisa tu conexión e intenta de nuevo.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Suscribirme";
+      }
+    });
+  </script>
+</body>
+</html>
